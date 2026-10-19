@@ -90,7 +90,7 @@ To keep sessions fluid, solves can be queued for later analysis, and the assista
 
 Phase 1 stores every solve and analysis in a local SQLite database *(planned)*.
 
-Store raw data, not only conclusions: scramble, answers or reconstruction, stage times when available, cases met, algorithms used, and a versioned snapshot of the assistant and method config used for each analysis. 
+Store raw data, not only conclusions: scramble, answers or reconstruction, stage times when available, cases met, algorithms used, and a versioned snapshot of the assistant and method config used for each analysis.
 
 Export to CSV/Parquet.
 

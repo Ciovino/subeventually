@@ -5,6 +5,7 @@ Thanks for your interest! The project is in early development, so expect things 
 ## Getting started
 
 Requirements: `git` and [`uv`](https://docs.astral.sh/uv/). uv installs the right Python version automatically.
+Supported Python versions: 3.12 and newer. Local development uses 3.12 (see `.python-version`).
 
 ```bash
 git clone https://github.com/Ciovino/subeventually.git
@@ -12,16 +13,26 @@ cd subeventually
 uv sync
 ```
 
-### Common commands
+Then install the pre-commit hooks (ruff and basic file checks run on every commit):
 
-<!-- To be confirmed when the scaffolding milestone (M0) lands. -->
+```bash
+uv tool install pre-commit
+pre-commit install
+```
+
+### Common commands
 
 | Task | Command |
 |---|---|
 | Run tests | `uv run pytest` |
 | Lint | `uv run ruff check .` |
 | Format | `uv run ruff format .` |
+| Check formatting | `uv run ruff format --check .` |
 | Type-check | `uv run mypy packages` |
+| Run all hooks | `pre-commit run --all-files` |
+| Run the app | `uv run subeventually` |
+
+Tests live next to each package, in `packages/<name>/tests/`. CI runs the same commands on Linux and Windows with the oldest and newest supported Python.
 
 ## Workflow
 
@@ -34,7 +45,7 @@ uv sync
 
 ## Code conventions
 
-- Python with type hints everywhere; mypy runs in strict mode for `packages/core`.
+- Python with type hints everywhere; mypy runs in strict mode for all packages.
 - `subeventually_core` must never import from `subeventually_tui` or any UI library.
 - Prefer small pure functions and frozen dataclasses for state.
 - Public functions and classes have docstrings.
