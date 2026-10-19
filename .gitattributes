@@ -1,0 +1,12 @@
+# Normalize line endings: LF in the repository and in working copies,
+# so Windows/WSL and Linux never fight over CRLF.
+* text=auto eol=lf
+
+# Binary files: never touch them.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.db binary
+*.sqlite binary
+*.parquet binary
