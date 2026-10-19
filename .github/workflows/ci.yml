@@ -14,6 +14,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# setup-uv publishes no floating major tag (no `@v10`), so it is pinned to the
+# commit of an exact release. actions/checkout does keep a `v7` tag.
 jobs:
   lint:
     name: lint
@@ -24,7 +26,7 @@ jobs:
         with:
           persist-credentials: false
       # No python-version: uv reads .python-version (the minimum supported).
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       - name: Check lockfile and install
         run: uv sync --locked
       - name: Ruff lint
@@ -45,7 +47,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: ${{ matrix.python }}
       - name: Check lockfile and install
