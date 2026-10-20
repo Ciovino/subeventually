@@ -13,6 +13,8 @@ The core is a library with no UI code, so the Phase 2 server can import it uncha
 
 ## Cube model
 
+State representation, numbering and orientation conventions: [ADR 0004](adr/0004-cube-state-representation.md).
+
 - Cubie-based state (corner/edge permutation and orientation), compact and hashable.
 - Precomputed move tables and pruning tables for search.
 - A facelet view only for display and input validation.
