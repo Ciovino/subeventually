@@ -77,7 +77,7 @@ class Face(IntEnum):
 
 
 class Layer(Enum):
-    """What a move turns: one of the six faces, or the whole cube (x, y, z).
+    """What a move turns: a face, a middle slice, a wide layer or the whole cube (x, y, z).
 
     Each value is the WCA notation token.
     """
@@ -88,6 +88,15 @@ class Layer(Enum):
     R = "R"
     F = "F"
     B = "B"
+    M = "M"
+    E = "E"
+    S = "S"
+    UW = "Uw"
+    DW = "Dw"
+    LW = "Lw"
+    RW = "Rw"
+    FW = "Fw"
+    BW = "Bw"
     X = "x"
     Y = "y"
     Z = "z"
@@ -134,6 +143,33 @@ F_PRIME: Final = Move(Layer.F, 3)
 B: Final = Move(Layer.B, 1)
 B2: Final = Move(Layer.B, 2)
 B_PRIME: Final = Move(Layer.B, 3)
+M: Final = Move(Layer.M, 1)
+M2: Final = Move(Layer.M, 2)
+M_PRIME: Final = Move(Layer.M, 3)
+E: Final = Move(Layer.E, 1)
+E2: Final = Move(Layer.E, 2)
+E_PRIME: Final = Move(Layer.E, 3)
+S: Final = Move(Layer.S, 1)
+S2: Final = Move(Layer.S, 2)
+S_PRIME: Final = Move(Layer.S, 3)
+UW: Final = Move(Layer.UW, 1)
+UW2: Final = Move(Layer.UW, 2)
+UW_PRIME: Final = Move(Layer.UW, 3)
+DW: Final = Move(Layer.DW, 1)
+DW2: Final = Move(Layer.DW, 2)
+DW_PRIME: Final = Move(Layer.DW, 3)
+LW: Final = Move(Layer.LW, 1)
+LW2: Final = Move(Layer.LW, 2)
+LW_PRIME: Final = Move(Layer.LW, 3)
+RW: Final = Move(Layer.RW, 1)
+RW2: Final = Move(Layer.RW, 2)
+RW_PRIME: Final = Move(Layer.RW, 3)
+FW: Final = Move(Layer.FW, 1)
+FW2: Final = Move(Layer.FW, 2)
+FW_PRIME: Final = Move(Layer.FW, 3)
+BW: Final = Move(Layer.BW, 1)
+BW2: Final = Move(Layer.BW, 2)
+BW_PRIME: Final = Move(Layer.BW, 3)
 X: Final = Move(Layer.X, 1)
 X2: Final = Move(Layer.X, 2)
 X_PRIME: Final = Move(Layer.X, 3)
@@ -149,6 +185,9 @@ _FACE_LAYERS: Final = (Layer.U, Layer.D, Layer.L, Layer.R, Layer.F, Layer.B)
 
 FACE_TURNS: Final = tuple(Move(layer, amount) for layer in _FACE_LAYERS for amount in _AMOUNTS)
 """The 18 face turns: U, U2, U', D, ..., B'."""
+
+ALL_MOVES: Final = tuple(Move(layer, amount) for layer in Layer for amount in _AMOUNTS)
+"""Every 3x3 move (54): the face turns, then slices, wide moves and rotations."""
 
 
 def _parity(perm: tuple[int, ...]) -> int:
@@ -417,6 +456,15 @@ type _Recipe = tuple[tuple[tuple[Layer, int], ...], tuple[Layer, int] | None]
 
 _RECIPES: Final[dict[Layer, _Recipe]] = {
     **{face: (((face, 1),), None) for face in _FACE_LAYERS},
+    Layer.M: (((Layer.R, 1), (Layer.L, 3)), (Layer.X, 3)),
+    Layer.E: (((Layer.U, 1), (Layer.D, 3)), (Layer.Y, 3)),
+    Layer.S: (((Layer.F, 3), (Layer.B, 1)), (Layer.Z, 1)),
+    Layer.UW: (((Layer.D, 1),), (Layer.Y, 1)),
+    Layer.DW: (((Layer.U, 1),), (Layer.Y, 3)),
+    Layer.LW: (((Layer.R, 1),), (Layer.X, 3)),
+    Layer.RW: (((Layer.L, 1),), (Layer.X, 1)),
+    Layer.FW: (((Layer.B, 1),), (Layer.Z, 1)),
+    Layer.BW: (((Layer.F, 1),), (Layer.Z, 3)),
     **{rotation: ((), (rotation, 1)) for rotation in _ROTATION_SOURCES},
 }
 

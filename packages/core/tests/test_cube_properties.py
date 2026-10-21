@@ -1,26 +1,9 @@
 from hypothesis import given
 from hypothesis import strategies as st
 
-from subeventually_core.cube import (
-    FACE_TURNS,
-    SOLVED,
-    X2,
-    X_PRIME,
-    Y2,
-    Y_PRIME,
-    Z2,
-    Z_PRIME,
-    CubeState,
-    Move,
-    X,
-    Y,
-    Z,
-    invert,
-)
+from subeventually_core.cube import ALL_MOVES, SOLVED, CubeState, Move, invert
 
-ROTATIONS = (X, X2, X_PRIME, Y, Y2, Y_PRIME, Z, Z2, Z_PRIME)
-
-sequences = st.lists(st.sampled_from(FACE_TURNS + ROTATIONS), max_size=50)
+sequences = st.lists(st.sampled_from(ALL_MOVES), max_size=50)
 
 
 @given(sequences)
