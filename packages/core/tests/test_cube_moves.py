@@ -1,8 +1,7 @@
-from typing import Literal
-
 import pytest
 
 from subeventually_core.cube import (
+    FACE_TURNS,
     R_PRIME,
     SOLVED,
     U_PRIME,
@@ -15,8 +14,7 @@ from subeventually_core.cube import (
     U,
 )
 
-AMOUNTS: tuple[Literal[1, 2, 3], ...] = (1, 2, 3)
-FACE_TURNS = tuple(Move(layer, amount) for layer in Layer for amount in AMOUNTS)
+FACE_LAYERS = tuple(dict.fromkeys(move.layer for move in FACE_TURNS))
 
 
 def test_there_are_18_distinct_face_turns() -> None:
@@ -247,21 +245,20 @@ def test_b_by_hand() -> None:
     )
 
 
-@pytest.mark.parametrize("layer", Layer, ids=lambda layer: layer.value)
+@pytest.mark.parametrize("layer", FACE_LAYERS, ids=lambda layer: layer.value)
 def test_quarter_turn_has_order_exactly_4(layer: Layer) -> None:
     quarter = Move(layer, 1)
     states = [SOLVED.apply_all([quarter] * k) for k in range(1, 5)]
     assert [s.is_solved() for s in states] == [False, False, False, True]
 
 
-@pytest.mark.parametrize("layer", Layer, ids=lambda layer: layer.value)
+@pytest.mark.parametrize("layer", FACE_LAYERS, ids=lambda layer: layer.value)
 def test_move_then_inverse_is_identity(layer: Layer) -> None:
-    for amount in AMOUNTS:
-        move = Move(layer, amount)
+    for move in (m for m in FACE_TURNS if m.layer is layer):
         assert SOLVED.apply(move).apply(move.inverse()) == SOLVED
 
 
-@pytest.mark.parametrize("layer", Layer, ids=lambda layer: layer.value)
+@pytest.mark.parametrize("layer", FACE_LAYERS, ids=lambda layer: layer.value)
 def test_half_turn_is_two_quarter_turns(layer: Layer) -> None:
     quarter = Move(layer, 1)
     assert SOLVED.apply(Move(layer, 2)) == SOLVED.apply(quarter).apply(quarter)

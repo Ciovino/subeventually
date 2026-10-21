@@ -1,4 +1,4 @@
-"""Cubie-based 3x3 cube state, face turns and inverses.
+"""Cubie-based 3x3 cube state, moves and inverses.
 
 The representation is decided in ``docs/adr/0004-cube-state-representation.md``:
 
@@ -8,7 +8,12 @@ The representation is decided in ``docs/adr/0004-cube-state-representation.md``:
   slot's facelets listed clockwise from its U/D facelet;
 - edge flip uses the F/B rule: only F and B quarter turns change it;
 - the cubies are stored relative to the centers, plus a ``frame`` (one of the 24 whole-cube
-  orientations). In this milestone face turns never change the frame.
+  orientations). Rotations change only the frame; a face move turns the fixed face that the
+  frame puts in that position.
+
+The frame numbering is decided in ``docs/adr/0005-frame-encoding.md``:
+``frame = 4 * up + n``, where ``up`` is the :class:`Face` on top and ``n`` counts ``y``
+rotations from a base orientation for that top face.
 """
 
 from __future__ import annotations
@@ -56,8 +61,26 @@ class Edge(IntEnum):
     BR = 11
 
 
+class Face(IntEnum):
+    """A fixed face, named by where its center is in frame 0 (white on U, green on F).
+
+    Ordered like the standard facelet string (U, R, F, D, L, B). A :class:`Layer` is a
+    position in notation; a ``Face`` is a center, wherever the cube is held.
+    """
+
+    U = 0  # white
+    R = 1  # red
+    F = 2  # green
+    D = 3  # yellow
+    L = 4  # orange
+    B = 5  # blue
+
+
 class Layer(Enum):
-    """What a move turns. In this milestone only the six faces."""
+    """What a move turns: one of the six faces, or the whole cube (x, y, z).
+
+    Each value is the WCA notation token.
+    """
 
     U = "U"
     D = "D"
@@ -65,6 +88,9 @@ class Layer(Enum):
     R = "R"
     F = "F"
     B = "B"
+    X = "x"
+    Y = "y"
+    Z = "z"
 
 
 _INVERSE_AMOUNT: Final[dict[Amount, Amount]] = {1: 3, 2: 2, 3: 1}
@@ -108,6 +134,21 @@ F_PRIME: Final = Move(Layer.F, 3)
 B: Final = Move(Layer.B, 1)
 B2: Final = Move(Layer.B, 2)
 B_PRIME: Final = Move(Layer.B, 3)
+X: Final = Move(Layer.X, 1)
+X2: Final = Move(Layer.X, 2)
+X_PRIME: Final = Move(Layer.X, 3)
+Y: Final = Move(Layer.Y, 1)
+Y2: Final = Move(Layer.Y, 2)
+Y_PRIME: Final = Move(Layer.Y, 3)
+Z: Final = Move(Layer.Z, 1)
+Z2: Final = Move(Layer.Z, 2)
+Z_PRIME: Final = Move(Layer.Z, 3)
+
+_AMOUNTS: Final[tuple[Amount, ...]] = (1, 2, 3)
+_FACE_LAYERS: Final = (Layer.U, Layer.D, Layer.L, Layer.R, Layer.F, Layer.B)
+
+FACE_TURNS: Final = tuple(Move(layer, amount) for layer in _FACE_LAYERS for amount in _AMOUNTS)
+"""The 18 face turns: U, U2, U', D, ..., B'."""
 
 
 def _parity(perm: tuple[int, ...]) -> int:
@@ -175,14 +216,15 @@ class CubeState:
         object.__setattr__(state, "frame", frame)
         return state
 
-    def _multiply(self, m: CubeState) -> CubeState:
+    def _multiply(self, m: CubeState, frame: int) -> CubeState:
+        # The cubies of self · m, held in ``frame`` (m.frame is ignored).
         cp, co, ep, eo = self.cp, self.co, self.ep, self.eo
         return CubeState._unchecked(
             tuple(cp[i] for i in m.cp),
             tuple((co[i] + t) % 3 for i, t in zip(m.cp, m.co, strict=True)),
             tuple(ep[i] for i in m.ep),
             tuple((eo[i] + f) % 2 for i, f in zip(m.ep, m.eo, strict=True)),
-            self.frame,
+            frame,
         )
 
     @property
@@ -198,29 +240,23 @@ class CubeState:
         """Return the slot that edge ``piece`` is currently in."""
         return Edge(self.ep.index(piece))
 
-    def _check_frame_supported(self) -> None:
-        if self.frame != 0:
-            raise NotImplementedError("applying moves with a frame other than 0 comes in M1b")
+    @property
+    def held(self) -> tuple[Face, Face]:
+        """How the cube is held: the ``(up, front)`` faces, e.g. ``(Face.U, Face.F)`` in frame 0."""
+        faces = _FRAME_FACES[self.frame]
+        return (faces[Layer.U], faces[Layer.F])
 
     def apply(self, move: Move) -> CubeState:
-        """Return the state after ``move``.
-
-        Raises:
-            NotImplementedError: if ``frame`` is not 0 (frames are implemented in M1b).
-        """
-        self._check_frame_supported()
-        return self._multiply(_MOVE_TABLE[move])
+        """Return the state after ``move``, read relative to how the cube is held."""
+        transformation, frame = _MOVE_TABLE[self.frame, move]
+        return self._multiply(transformation, frame)
 
     def apply_all(self, moves: Iterable[Move]) -> CubeState:
-        """Return the state after applying ``moves`` in order.
-
-        Raises:
-            NotImplementedError: if ``frame`` is not 0 (frames are implemented in M1b).
-        """
-        self._check_frame_supported()
+        """Return the state after applying ``moves`` in order."""
         state = self
         for move in moves:
-            state = state._multiply(_MOVE_TABLE[move])
+            transformation, frame = _MOVE_TABLE[state.frame, move]
+            state = state._multiply(transformation, frame)
         return state
 
     def is_solved(self) -> bool:
@@ -302,13 +338,107 @@ _QUARTER_TURNS: Final[dict[Layer, CubeState]] = {
 }
 
 
-def _build_move_table() -> dict[Move, CubeState]:
-    table: dict[Move, CubeState] = {}
-    for layer, quarter in _QUARTER_TURNS.items():
-        half = quarter._multiply(quarter)
-        table[Move(layer, 1)] = quarter
-        table[Move(layer, 2)] = half
-        table[Move(layer, 3)] = half._multiply(quarter)
+# Frames (ADR 0005). A frame is stored as a map from notation position to the fixed face
+# currently there. All 24 are derived from three rotation permutations, never written out.
+
+type _FaceMap = dict[Layer, Face]
+
+# For each rotation, position <- the position whose face moves there (others stay).
+_ROTATION_SOURCES: Final[dict[Layer, dict[Layer, Layer]]] = {
+    Layer.X: {Layer.U: Layer.F, Layer.F: Layer.D, Layer.D: Layer.B, Layer.B: Layer.U},
+    Layer.Y: {Layer.F: Layer.R, Layer.R: Layer.B, Layer.B: Layer.L, Layer.L: Layer.F},
+    Layer.Z: {Layer.U: Layer.L, Layer.R: Layer.U, Layer.D: Layer.R, Layer.L: Layer.D},
+}
+
+# The single rotation that brings each face up, with its quarter-turn count.
+_BASE_ROTATIONS: Final[dict[Face, tuple[Layer, int] | None]] = {
+    Face.U: None,
+    Face.R: (Layer.Z, 3),
+    Face.F: (Layer.X, 1),
+    Face.D: (Layer.Z, 2),
+    Face.L: (Layer.Z, 1),
+    Face.B: (Layer.X, 3),
+}
+
+
+def _rotate(faces: _FaceMap, rotation: Layer, quarters: int) -> _FaceMap:
+    sources = _ROTATION_SOURCES[rotation]
+    for _ in range(quarters % 4):
+        faces = {pos: faces[sources.get(pos, pos)] for pos in _FACE_LAYERS}
+    return faces
+
+
+def _held(faces: _FaceMap) -> tuple[Face, Face]:
+    return (faces[Layer.U], faces[Layer.F])
+
+
+def _build_frames() -> tuple[_FaceMap, ...]:
+    identity = {layer: Face[layer.name] for layer in _FACE_LAYERS}
+    frames: list[_FaceMap] = []
+    for up in Face:
+        base = identity
+        if (setup := _BASE_ROTATIONS[up]) is not None:
+            base = _rotate(base, *setup)
+        frames.extend(_rotate(base, Layer.Y, n) for n in range(4))
+    # Guards the derivation: 24 distinct orientations, numbered 4 * up + n.
+    if len({_held(f) for f in frames}) != _N_FRAMES:
+        raise RuntimeError("frame table does not list 24 distinct orientations")
+    if any(_held(f)[0] != i // 4 for i, f in enumerate(frames)):
+        raise RuntimeError("frame table does not satisfy frame // 4 == up")
+    return tuple(frames)
+
+
+_FRAME_FACES: Final = _build_frames()
+_FRAME_INDEX: Final = {_held(faces): frame for frame, faces in enumerate(_FRAME_FACES)}
+_ROTATED_FRAME: Final = {
+    rotation: tuple(_FRAME_INDEX[_held(_rotate(faces, rotation, 1))] for faces in _FRAME_FACES)
+    for rotation in _ROTATION_SOURCES
+}
+
+
+def frame_of(up: Face, front: Face) -> int:
+    """Return the frame in which ``up`` is on top and ``front`` is in front (ADR 0005).
+
+    Raises:
+        ValueError: if the two faces are equal or opposite.
+    """
+    try:
+        return _FRAME_INDEX[up, front]
+    except KeyError:
+        raise ValueError(
+            f"front must be adjacent to up, got up={up.name}, front={front.name}"
+        ) from None
+
+
+# Each layer as face turns (notation position, quarter turns) followed by an optional
+# rotation (axis, quarter turns), as in ADR 0004. A move by ``amount`` repeats every part
+# ``amount`` times; this is valid because a rotation never moves the faces turned with it.
+type _Recipe = tuple[tuple[tuple[Layer, int], ...], tuple[Layer, int] | None]
+
+_RECIPES: Final[dict[Layer, _Recipe]] = {
+    **{face: (((face, 1),), None) for face in _FACE_LAYERS},
+    **{rotation: ((), (rotation, 1)) for rotation in _ROTATION_SOURCES},
+}
+
+
+def _build_move_table() -> dict[tuple[int, Move], tuple[CubeState, int]]:
+    # (frame, move) -> (cubie transformation, frame afterwards). Face turns are mapped
+    # to the fixed face in that position before the rotation changes the frame.
+    table: dict[tuple[int, Move], tuple[CubeState, int]] = {}
+    for frame, faces in enumerate(_FRAME_FACES):
+        for layer, (turns, rotation) in _RECIPES.items():
+            for amount in _AMOUNTS:
+                transformation = SOLVED
+                for position, quarters in turns:
+                    quarter = _QUARTER_TURNS[Layer[faces[position].name]]
+                    for _ in range(quarters * amount % 4):
+                        transformation = transformation._multiply(quarter, 0)
+                new_frame = frame
+                if rotation is not None:
+                    axis, quarters = rotation
+                    for _ in range(quarters * amount % 4):
+                        new_frame = _ROTATED_FRAME[axis][new_frame]
+                table[frame, Move(layer, amount)] = (transformation, new_frame)
     return table
 
 
