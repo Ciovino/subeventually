@@ -4,6 +4,7 @@ from subeventually_core.cube import (
     ALL_MOVES,
     FACE_TURNS,
     M2,
+    M_PRIME,
     RW,
     SOLVED,
     U2,
@@ -75,6 +76,29 @@ def test_h_perm() -> None:
     assert state.eo == SOLVED.eo
     assert (state.edge_slot(Edge.UF), state.edge_slot(Edge.UB)) == (Edge.UB, Edge.UF)
     assert (state.edge_slot(Edge.UL), state.edge_slot(Edge.UR)) == (Edge.UR, Edge.UL)
+    assert state.ep[4:] == SOLVED.ep[4:]
+
+
+def test_u_perm() -> None:
+    """M2 U M U2 M' U M2 cycles three U-layer edges. Its quarter M turns pin M's direction.
+
+    Start solved, white on top, green in front. At the end the cube is held the same way and:
+
+    - the white-green edge (top-front) goes to top-right, between the white and red centers;
+    - the white-red edge (top-right) goes to top-left, between the white and orange centers;
+    - the white-orange edge (top-left) goes to top-front, between the white and green centers;
+    - the white-blue edge (top-back) stays, so the solved bar is at the back;
+    - every white sticker stays on top, and no corner moves.
+    """
+    state = SOLVED.apply_all([M2, U, M, U2, M_PRIME, U, M2])
+    assert state.frame == 0
+    assert state.cp == SOLVED.cp
+    assert state.co == SOLVED.co
+    assert state.eo == SOLVED.eo
+    assert state.edge_slot(Edge.UF) is Edge.UR
+    assert state.edge_slot(Edge.UR) is Edge.UL
+    assert state.edge_slot(Edge.UL) is Edge.UF
+    assert state.edge_slot(Edge.UB) is Edge.UB
     assert state.ep[4:] == SOLVED.ep[4:]
 
 
