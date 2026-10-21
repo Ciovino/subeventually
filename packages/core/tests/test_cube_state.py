@@ -1,6 +1,6 @@
 import pytest
 
-from subeventually_core.cube import SOLVED, Corner, CubeState, Edge, R, U
+from subeventually_core.cube import SOLVED, Corner, CubeState, Edge, F, L, R, U
 
 SOLVED_CP = tuple(range(8))
 SOLVED_CO = (0,) * 8
@@ -58,12 +58,11 @@ def test_frame_is_part_of_equality_but_not_of_solvedness() -> None:
     assert held_differently.cubies == SOLVED.cubies
 
 
-def test_moves_with_a_non_zero_frame_are_not_implemented_yet() -> None:
+def test_moves_work_in_a_non_zero_frame() -> None:
+    # Frame 3: white on top, orange in front. U still turns white, F turns orange.
     held_differently = CubeState(SOLVED_CP, SOLVED_CO, SOLVED_EP, SOLVED_EO, frame=3)
-    with pytest.raises(NotImplementedError):
-        held_differently.apply(U)
-    with pytest.raises(NotImplementedError):
-        held_differently.apply_all([U])
+    assert held_differently.apply(U) == CubeState(*SOLVED.apply(U).cubies, frame=3)
+    assert held_differently.apply_all([F]) == CubeState(*SOLVED.apply(L).cubies, frame=3)
 
 
 def test_cubies_is_the_four_arrays() -> None:

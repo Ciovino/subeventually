@@ -1,19 +1,14 @@
-from typing import Literal
-
 from hypothesis import given
 from hypothesis import strategies as st
 
-from subeventually_core.cube import SOLVED, CubeState, Layer, Move, invert
+from subeventually_core.cube import ALL_MOVES, SOLVED, CubeState, Move, invert
 
-AMOUNTS: tuple[Literal[1, 2, 3], ...] = (1, 2, 3)
-FACE_TURNS = tuple(Move(layer, amount) for layer in Layer for amount in AMOUNTS)
-
-sequences = st.lists(st.sampled_from(FACE_TURNS), max_size=50)
+sequences = st.lists(st.sampled_from(ALL_MOVES), max_size=50)
 
 
 @given(sequences)
-def test_sequence_then_inverse_is_solved(seq: list[Move]) -> None:
-    assert SOLVED.apply_all([*seq, *invert(seq)]).is_solved()
+def test_sequence_then_inverse_is_solved_in_frame_0(seq: list[Move]) -> None:
+    assert SOLVED.apply_all([*seq, *invert(seq)]) == SOLVED
 
 
 @given(sequences)
