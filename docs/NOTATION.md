@@ -1,0 +1,204 @@
+# Notation
+
+This page describes how to write scrambles, algorithms and reconstructions in subeventually: which moves you can type, which common variants are understood, how text is printed back, and what is rejected and why.
+
+Everything here is for the **3x3** cube. The notation is [WCA notation](https://www.worldcubeassociation.org/regulations/#article-12-notation), plus the extensions every cuber uses (slice moves, lowercase wide moves). The rule of thumb:
+
+- **When you type**, the common ways of writing an alg are accepted, so you can paste it from an alg sheet, a phone note or a video description.
+- **When we print**, there is a single canonical form: WCA style, single spaces.
+
+## Quick reference
+
+### Face turns
+
+| Move | Turns | Direction |
+|---|---|---|
+| `U` | top layer | clockwise, looking at the U face |
+| `D` | bottom layer | clockwise, looking at the D face |
+| `R` | right layer | clockwise, looking at the R face |
+| `L` | left layer | clockwise, looking at the L face |
+| `F` | front layer | clockwise, looking at the F face |
+| `B` | back layer | clockwise, looking at the B face |
+
+### Slice moves
+
+| Move | Turns | Direction |
+|---|---|---|
+| `M` | middle layer between L and R | same as `L` |
+| `E` | middle layer between U and D | same as `D` |
+| `S` | middle layer between F and B | same as `F` |
+
+`M`, `E` and `S` are not in the WCA regulations, but they are standard in algorithms.
+
+### Wide moves
+
+A wide move turns a face together with the middle layer next to it.
+
+| Move | Also written | Turns |
+|---|---|---|
+| `Rw` | `r` | R and M, in the direction of `R` |
+| `Lw` | `l` | L and M, in the direction of `L` |
+| `Uw` | `u` | U and E, in the direction of `U` |
+| `Dw` | `d` | D and E, in the direction of `D` |
+| `Fw` | `f` | F and S, in the direction of `F` |
+| `Bw` | `b` | B and S, in the direction of `B` |
+
+`Rw` is the WCA spelling. `r` is the same move and is just as welcome: `r U r'` and `Rw U Rw'` mean the same thing.
+
+### Rotations
+
+| Move | Also written | Rotates the whole cube |
+|---|---|---|
+| `x` | `X` | in the direction of `R` |
+| `y` | `Y` | in the direction of `U` |
+| `z` | `Z` | in the direction of `F` |
+
+After a rotation, every following move is read from how the cube is now held. In `y R U R'`, the `R` turns whatever face is on the right after the `y`.
+
+## Turn amounts
+
+Every move takes an optional count and an optional prime mark, in that order.
+
+| You type | Read as | Meaning |
+|---|---|---|
+| `R` | `R` | quarter turn clockwise |
+| `R'` | `R'` | quarter turn counter-clockwise |
+| `R2` | `R2` | half turn |
+| `R2'` | `R2` | half turn (see below) |
+| `R3` | `R'` | three quarter turns clockwise = one counter-clockwise |
+| `R3'` | `R` | three quarter turns counter-clockwise = one clockwise |
+| `R1` | `R` | |
+
+The same applies to every move: `M2'`, `r3`, `y2'`, `Lw2` and so on.
+
+> **About `R2'`.** Many alg sheets write `R2'` or `U2'` to say which way to do the double turn, as a fingertrick hint. The cube ends up the same either way, so subeventually reads `R2'` as `R2` and prints it as `R2`. The hint is not kept.
+
+## Accepted variants
+
+### Prime marks
+
+Any of these work as the prime mark:
+
+| Character | Where it comes from |
+|---|---|
+| `'` | the normal apostrophe on a keyboard |
+| `’` | "smart quotes" on phones, macOS, word processors and many web pages |
+| `′` | the typographic prime symbol |
+
+`R’` and `R′` are both read as `R'`.
+
+### Spaces
+
+Spaces between moves are optional, and any amount of spaces, tabs and line breaks counts as a single separator. All of these are the same:
+
+```
+R U R' U'
+R  U   R'  U'
+RUR'U'
+R U
+R' U'
+```
+
+A digit right after a move is always that move's count, so `R2U` is `R2 U`.
+
+### Parentheses
+
+Parentheses group moves for readability, usually to show fingertricks:
+
+```
+(R U R' U') (R' F R F')
+```
+
+They are accepted and then ignored. They must be balanced, and they may be nested. They are not printed back: the line above is printed as `R U R' U' R' F R F'`.
+
+## Comments
+
+`//` starts a comment that runs to the end of the line. This is mostly useful for reconstructions:
+
+```
+x2 y      // inspection
+R' F R2 D' // cross
+U R U' R'
+U2 (R U R') // first pair
+```
+
+Comments are kept together with the place where they appear in the move sequence. When printed back, each comment ends its line. Line breaks without a comment are not kept, so the example above is printed as:
+
+```
+x2 y // inspection
+R' F R2 D' // cross
+U R U' R' U2 R U R' // first pair
+```
+
+A comment with no moves before it gets a line of its own:
+
+```
+// Solve 3
+R U R'
+```
+
+Only `//` starts a comment. `#` and `/* ... */` are not comments.
+
+## Canonical output
+
+When subeventually prints a move sequence, it always uses this form:
+
+- WCA spelling: `Rw`, never `r`; rotations in lowercase (`x`, `y`, `z`).
+- The ASCII apostrophe `'` for primes.
+- Half turns as `R2`, never `R2'`. `R3` becomes `R'`, `R3'` becomes `R`, `R1` becomes `R`.
+- No parentheses.
+- One space between moves, nothing at the start or end.
+- Each comment as `// text` at the end of its line, followed by a line break (except after the last line).
+
+For example:
+
+| You type | Printed as |
+|---|---|
+| `y (r U r') U2' (R U R3)` | `y Rw U Rw' U2 R U R'` |
+| `Y RUR’U’` | `y R U R' U'` |
+| `x2'  M2 U M2` | `x2 M2 U M2` |
+
+Printing is stable: if you type the printed form back in, you get exactly the same sequence and the same text.
+
+## What is not accepted
+
+When something can't be read, you get the **first** problem found, with its line and column (both counted from 1) and a message, for example:
+
+```
+line 1, column 6: big-cube notation is not supported (3x3 only)
+```
+
+| You type | Problem | Message |
+|---|---|---|
+| `3Rw`, `2R`, `2-4r`, `3r` | big-cube notation | big-cube notation is not supported (3x3 only) |
+| `[R, U]`, `[R: U]` | commutator or conjugate | commutator and conjugate notation are not supported; write the moves out |
+| `(R U)3` | repeated group | repeating a group is not supported; write the moves out |
+| `(R U)'` | inverted group | inverting a group is not supported; write the moves out |
+| `R'2` | prime before the count | the count goes before the prime: write R2' |
+| `R4`, `R0`, `R22` | turn count out of range | turn count must be 1, 2 or 3 |
+| `R''` | two prime marks | a move can have only one prime mark |
+| `' R` | prime with no move | prime mark without a move |
+| `rw`, `rW`, `RW` | wrong case for a wide move | unknown move 'rw': write Rw or r |
+| `m`, `e`, `s` | lowercase slice | unknown move 'm': slices are uppercase, as in M |
+| `R w`, `Mw`, `xw` | `w` not right after a face letter | 'w' must come right after U, D, L, R, F or B, as in Rw |
+| `(R U` | unclosed parenthesis | '(' is never closed |
+| `R U)` | extra closing parenthesis | ')' has no matching '(' |
+| `R . U`, `R # U`, `R / U`, `Q` | anything else | unexpected character '.' |
+
+The position points at the character where the problem starts. For example, in `R U2 3Rw` the error is at column 6, the `3`.
+
+Commutators, conjugates and repetition are useful shorthand, but they are out of scope for now. Write the moves out in full instead.
+
+An empty input, or one with only comments, is not an error: it is an empty sequence.
+
+## Examples
+
+| What | You type | Printed as |
+|---|---|---|
+| WCA scramble | `D2 F2 U' B2 R2 U2 R2 F2 D' L2 U' R' D B' L' U' R F' L' U2 B` | same |
+| Sexy move | `(R U R' U')` | `R U R' U'` |
+| T perm | `(R U R' U') (R' F) (R2 U' R') U' (R U R' F')` | `R U R' U' R' F R2 U' R' U' R U R' F'` |
+| U perm (Ua) | `R U' R U R U R U' R' U' R2` | same |
+| H perm | `M2 U M2 U2 M2 U M2` | same |
+| Sune from the back, with an extra-turn `R3` | `y2 (R U R' U) R U2' R3` | `y2 R U R' U R U2 R'` |
+| An OLL typed on a phone | `Y rUR’U’r’FRF’` | `y Rw U R' U' Rw' F R F'` |
