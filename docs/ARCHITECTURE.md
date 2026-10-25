@@ -11,6 +11,15 @@ This document describes the intended design. Parts not yet implemented are marke
 
 The core is a library with no UI code, so the Phase 2 server can import it unchanged.
 
+## Glossary
+
+- **Move**: one turn of a face, a middle slice, a wide layer or the whole cube (`R`, `M2`, `Rw'`, `y`).
+- **MoveSequence**: moves in order, with the `//` comments written between them. Parsing notation produces one.
+- **Scramble**: a move sequence applied to a solved cube held in WCA orientation (white on U, green on F), giving the starting state of a solve.
+- **Case**: a class of states that a lookup stage must solve, identified up to what the stage ignores (for example an OLL or PLL case, modulo AUF).
+- **Algorithm**: a named solution for one case, belonging to an algorithm set. It has one or more executions.
+- **Execution**: one concrete move sequence that performs an algorithm, with optional notes (fingertricks, regrips). All executions of an algorithm solve the same case.
+
 ## Cube model
 
 State representation, numbering and orientation conventions: [ADR 0004](adr/0004-cube-state-representation.md). Numbering of the 24 whole-cube orientations (frames): [ADR 0005](adr/0005-frame-encoding.md).
@@ -18,7 +27,7 @@ State representation, numbering and orientation conventions: [ADR 0004](adr/0004
 - Cubie-based state (corner/edge permutation and orientation), compact and hashable.
 - Precomputed move tables and pruning tables for search.
 - A facelet view only for display and input validation.
-- WCA notation parser: face turns, wide moves, slices, rotations, comments (`// ...`).
+- WCA notation parser and formatter: face turns, wide moves, slices, rotations, comments (`// ...`). The accepted notation is specified in [NOTATION.md](NOTATION.md).
 
 ## Methods and stages
 
