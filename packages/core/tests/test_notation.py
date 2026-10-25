@@ -67,7 +67,7 @@ def test_every_move_name_parses_to_that_move(move: Move) -> None:
 )
 def test_accepted_input_is_printed_canonically(text: str, canonical: str) -> None:
     sequence = notation.parse(text)
-    assert notation.format(sequence) == canonical
+    assert notation.to_text(sequence) == canonical
     assert notation.parse(canonical) == sequence
 
 
@@ -85,7 +85,7 @@ def test_comments_are_kept_at_their_position_and_end_their_line() -> None:
         Comment(6, "cross"),
         Comment(14, "first pair"),
     )
-    assert notation.format(sequence) == (
+    assert notation.to_text(sequence) == (
         "x2 y // inspection\nR' F R2 D' // cross\nU R U' R' U2 R U R' // first pair"
     )
 
@@ -103,7 +103,7 @@ def test_comments_are_kept_at_their_position_and_end_their_line() -> None:
     ],
 )
 def test_comment_layout(text: str, canonical: str) -> None:
-    assert notation.format(notation.parse(text)) == canonical
+    assert notation.to_text(notation.parse(text)) == canonical
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ def test_error_text_includes_the_position() -> None:
 
 def test_wca_scramble_is_unchanged() -> None:
     scramble = "D2 F2 U' B2 R2 U2 R2 F2 D' L2 U' R' D B' L' U' R F' L' U2 B"
-    assert notation.format(notation.parse(scramble)) == scramble
+    assert notation.to_text(notation.parse(scramble)) == scramble
 
 
 @pytest.mark.parametrize(
@@ -228,7 +228,7 @@ def test_inverse_reverses_inverts_and_drops_comments() -> None:
 
 def test_str_is_the_canonical_form() -> None:
     sequence = notation.parse("r U' // set up\n R")
-    assert str(sequence) == notation.format(sequence) == "Rw U' // set up\nR"
+    assert str(sequence) == notation.to_text(sequence) == "Rw U' // set up\nR"
 
 
 def test_equality_includes_comments() -> None:

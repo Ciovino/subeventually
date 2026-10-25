@@ -9,7 +9,7 @@ The accepted notation is specified for users in ``docs/NOTATION.md``. In short:
 - spaces between moves are optional, parentheses are checked for balance and dropped, and
   ``//`` comments are kept with the number of moves before them.
 
-:func:`format` prints the canonical form, and ``parse(format(seq)) == seq`` always holds.
+:func:`to_text` prints the canonical form, and ``parse(to_text(seq)) == seq`` always holds.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ class MoveSequence(Sequence[Move]):
 
     Behaves as a read-only sequence of its moves, so it can be passed wherever moves are
     expected (``CubeState.apply_all``, ``invert``). Equality includes the comments; compare
-    :attr:`moves` to ignore them. ``str()`` gives the canonical form (see :func:`format`).
+    :attr:`moves` to ignore them. ``str()`` gives the canonical form (see :func:`to_text`).
     """
 
     moves: tuple[Move, ...] = ()
@@ -115,7 +115,7 @@ class MoveSequence(Sequence[Move]):
         return MoveSequence(invert(self.moves))
 
     def __str__(self) -> str:
-        return format(self)
+        return to_text(self)
 
 
 def _error(text: str, index: int, message: str) -> NotationError:
@@ -225,7 +225,7 @@ def parse(text: str) -> MoveSequence:
     return MoveSequence(tuple(moves), tuple(comments))
 
 
-def format(sequence: MoveSequence) -> str:
+def to_text(sequence: MoveSequence) -> str:
     """Return the canonical text of ``sequence``.
 
     WCA spelling with single spaces (``Rw``, ``x``, ``R'``, ``R2``), no parentheses, and each

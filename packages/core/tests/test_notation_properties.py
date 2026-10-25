@@ -24,14 +24,14 @@ texts = st.text() | st.text(alphabet=NOTATION_ALPHABET)
 
 
 @given(st.lists(st.sampled_from(ALL_MOVES), max_size=50))
-def test_format_then_parse_gives_the_moves_back(moves: list[Move]) -> None:
+def test_to_text_then_parse_gives_the_moves_back(moves: list[Move]) -> None:
     sequence = MoveSequence(tuple(moves))
-    assert notation.parse(notation.format(sequence)) == sequence
+    assert notation.parse(notation.to_text(sequence)) == sequence
 
 
 @given(sequences())
-def test_format_then_parse_keeps_comments(sequence: MoveSequence) -> None:
-    assert notation.parse(notation.format(sequence)) == sequence
+def test_to_text_then_parse_keeps_comments(sequence: MoveSequence) -> None:
+    assert notation.parse(notation.to_text(sequence)) == sequence
 
 
 @given(texts)
@@ -46,4 +46,4 @@ def test_parse_succeeds_or_raises_notation_error(text: str) -> None:
         assert error.column >= 1
     else:
         # Whatever was accepted is printed in a form that reads back the same.
-        assert notation.parse(notation.format(sequence)) == sequence
+        assert notation.parse(notation.to_text(sequence)) == sequence
