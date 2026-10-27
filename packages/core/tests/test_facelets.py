@@ -7,7 +7,15 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from subeventually_core.cube import ALL_MOVES, SOLVED, CubeState, F, Face, Layer, M, Move, R, U, X
-from subeventually_core.facelets import WCA_COLORS, facelets, net, to_facelet_string, to_net
+from subeventually_core.facelets import (
+    WCA_COLORS,
+    FaceletError,
+    facelets,
+    from_facelet_string,
+    net,
+    to_facelet_string,
+    to_net,
+)
 
 sequences = st.lists(st.sampled_from(ALL_MOVES), max_size=30)
 
@@ -266,3 +274,133 @@ def test_core_does_not_load_a_ui_library() -> None:
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     )
     assert result.stdout.strip() == "[]"
+
+
+# Import.
+
+SOLVED_TEXT = to_facelet_string(SOLVED)
+
+
+def edited(text: str, changes: dict[int, str]) -> str:
+    stickers = list(text)
+    for index, letter in changes.items():
+        stickers[index] = letter
+    return "".join(stickers)
+
+
+def swapped(text: str, *pairs: tuple[int, int]) -> str:
+    stickers = list(text)
+    for a, b in pairs:
+        stickers[a], stickers[b] = stickers[b], stickers[a]
+    return "".join(stickers)
+
+
+@given(sequences)
+def test_import_inverts_export(seq: list[Move]) -> None:
+    state = SOLVED.apply_all(seq)
+    assert from_facelet_string(to_facelet_string(state)) == state
+
+
+@pytest.mark.parametrize("frame", range(24))
+@given(seq=sequences)
+def test_import_inverts_export_in_every_frame(frame: int, seq: list[Move]) -> None:
+    state = CubeState(*SOLVED.apply_all(seq).cubies, frame=frame)
+    assert from_facelet_string(to_facelet_string(state)) == state
+
+
+def test_import_reads_a_standard_string_in_frame_0() -> None:
+    text = "UUFUUFUUFRRRRRRRRRFFDFFDFFDDDBDDBDDBLLLLLLLLLUBBUBBUBB"
+    assert from_facelet_string(text) == SOLVED.apply(R)
+
+
+def test_import_ignores_surrounding_whitespace() -> None:
+    assert from_facelet_string(f"  {SOLVED_TEXT}\n") == SOLVED
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        pytest.param(
+            SOLVED_TEXT[:53], "facelet string must have 54 characters, got 53", id="length"
+        ),
+        pytest.param(
+            edited(SOLVED_TEXT, {12: "x"}),
+            "character 13 (R4) is 'x': only U, R, F, D, L and B are allowed",
+            id="character",
+        ),
+        pytest.param(
+            edited(SOLVED_TEXT, {0: "W"}),
+            "character 1 (U1) is 'W': use face letters (U, R, F, D, L, B), not color letters",
+            id="color-letter",
+        ),
+        pytest.param(
+            edited(SOLVED_TEXT, {9: "U"}),
+            "each color must appear 9 times: U appears 10 times, R appears 8 times",
+            id="counts",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (22, 0)),
+            "centers U on top and U in front are the same: no cube can be held like that",
+            id="centers-same",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (22, 31)),
+            "centers U on top and D in front are opposite: no cube can be held like that",
+            id="centers-opposite",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (13, 40)),
+            "centers are a mirror image: with U on top and F in front, "
+            "R must be on the right, got L",
+            id="centers-mirror",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (13, 49)),
+            "impossible centers: with U on top and F in front, R must be on the right, got B",
+            id="centers-impossible",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (9, 20)),
+            "the corner at URF has stickers U, F, R (clockwise): "
+            "no corner has these colors in this order",
+            id="corner",
+        ),
+        pytest.param(
+            swapped(to_facelet_string(SOLVED.apply(X)), (9, 20)),
+            "the corner at URF has stickers F, D, R (clockwise): "
+            "no corner has these colors in this order",
+            id="corner-named-as-held",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (7, 25)),
+            "the edge at UF has stickers F, F: no edge has these colors",
+            id="edge",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (29, 7), (15, 37)),
+            "corner UFL appears twice, at UFL and DFR",
+            id="duplicate",
+        ),
+        pytest.param(
+            edited(SOLVED_TEXT, {8: "F", 9: "U", 20: "R"}),
+            "impossible cube: corner twist sum is 1, must be a multiple of 3 (a twisted corner)",
+            id="twist",
+        ),
+        pytest.param(
+            swapped(SOLVED_TEXT, (7, 19)),
+            "impossible cube: edge flip sum is 1, must be even (a flipped edge)",
+            id="flip",
+        ),
+        pytest.param(
+            edited(SOLVED_TEXT, {19: "R", 10: "F"}),
+            "impossible cube: corner and edge permutations have different parity "
+            "(two swapped pieces)",
+            id="parity",
+        ),
+    ],
+)
+def test_import_errors(text: str, message: str) -> None:
+    with pytest.raises(FaceletError) as exc_info:
+        from_facelet_string(text)
+    assert exc_info.value.message == message
+    assert str(exc_info.value) == message

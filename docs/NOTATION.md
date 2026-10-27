@@ -264,6 +264,30 @@ FFFFFFFFFRRRRRRRRRDDDDDDDDDBBBBBBBBBLLLLLLLLLUUUUUUUUU
 
 So the centers tell how the cube is held. Most other tools assume the centers never move. They read and write the same strings as subeventually for a cube held in WCA orientation (`U` center on top, `F` center in front).
 
+### Reading a facelet string
+
+A facelet string must be exactly 54 of the letters `U`, `R`, `F`, `D`, `L`, `B`. Spaces and line breaks at the start or end are ignored; nothing else is. How the cube is held is read from the centers, so reading a string back gives exactly the state it was printed from.
+
+When the string is not a real cube, you get the **first** problem found, checked in the order below. Characters are counted from 1, after the surrounding spaces are removed, and also named by face and sticker (`R4` is the fourth sticker of the R block). Pieces are named by where they are as the cube is held.
+
+| Problem | Example message |
+|---|---|
+| wrong length | facelet string must have 54 characters, got 53 |
+| color letters instead of face letters | character 1 (U1) is 'W': use face letters (U, R, F, D, L, B), not color letters |
+| any other character | character 13 (R4) is 'x': only U, R, F, D, L and B are allowed |
+| a color not on exactly 9 stickers | each color must appear 9 times: U appears 10 times, R appears 8 times |
+| top and front centers equal or opposite | centers U on top and D in front are opposite: no cube can be held like that |
+| centers of a mirrored cube | centers are a mirror image: with U on top and F in front, R must be on the right, got L |
+| other impossible centers | impossible centers: with U on top and F in front, R must be on the right, got B |
+| a corner that does not exist | the corner at URF has stickers U, F, R (clockwise): no corner has these colors in this order |
+| an edge that does not exist | the edge at UF has stickers F, F: no edge has these colors |
+| the same piece twice | corner UFL appears twice, at UFL and DFR |
+| a twisted corner | impossible cube: corner twist sum is 1, must be a multiple of 3 (a twisted corner) |
+| a flipped edge | impossible cube: edge flip sum is 1, must be even (a flipped edge) |
+| two swapped pieces | impossible cube: corner and edge permutations have different parity (two swapped pieces) |
+
+A corner's stickers are listed clockwise, starting from the one on the top or bottom face.
+
 ### Text net
 
 The same layout, printed as text with a letter per sticker:

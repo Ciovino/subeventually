@@ -13,11 +13,13 @@ This module only describes stickers. Turning colors into terminal output is the 
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections import Counter
+from collections.abc import Callable, Mapping, Sequence
+from enum import IntEnum
 from types import MappingProxyType
 from typing import Final
 
-from subeventually_core.cube import CubeState, Face, frame_of
+from subeventually_core.cube import Corner, CubeState, Edge, Face, frame_of
 
 _N_FACELETS: Final = 54
 _N_FRAMES: Final = 24
@@ -167,6 +169,158 @@ def facelets(state: CubeState) -> tuple[Face, ...]:
 def to_facelet_string(state: CubeState) -> str:
     """Return the 54-character facelet string of ``state`` as held, e.g. ``"UUUUUUUUUR..."``."""
     return "".join(face.name for face in facelets(state))
+
+
+class FaceletError(ValueError):
+    """A facelet string that does not describe a real cube. ``message`` is the reason."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
+
+
+_LETTERS: Final = frozenset(face.name for face in Face)
+_COLOR_LETTERS: Final = frozenset("WYGO")  # white, yellow, green, orange; R and B are faces
+_CORNER_PIECES: Final = {faces: piece for piece, faces in enumerate(_CORNER_FACES)}
+_EDGE_PIECES: Final = {faces: piece for piece, faces in enumerate(_EDGE_FACES)}
+_CENTER_PLACES: Final = {
+    Face.R: "on the right",
+    Face.D: "at the bottom",
+    Face.L: "on the left",
+    Face.B: "at the back",
+}
+
+
+def _facelet_name(index: int) -> str:
+    return f"{Face(index // 9).name}{index % 9 + 1}"
+
+
+def _times(count: int) -> str:
+    return "1 time" if count == 1 else f"{count} times"
+
+
+def _read_stickers(text: str) -> tuple[Face, ...]:
+    if len(text) != _N_FACELETS:
+        raise FaceletError(f"facelet string must have {_N_FACELETS} characters, got {len(text)}")
+    for i, char in enumerate(text):
+        if char not in _LETTERS:
+            if char.upper() in _COLOR_LETTERS:
+                advice = "use face letters (U, R, F, D, L, B), not color letters"
+            else:
+                advice = "only U, R, F, D, L and B are allowed"
+            raise FaceletError(f"character {i + 1} ({_facelet_name(i)}) is {char!r}: {advice}")
+    stickers = tuple(Face[char] for char in text)
+    counts = Counter(stickers)
+    wrong = [f"{face.name} appears {_times(counts[face])}" for face in Face if counts[face] != 9]
+    if wrong:
+        raise FaceletError("each color must appear 9 times: " + ", ".join(wrong))
+    return stickers
+
+
+def _read_frame(held: tuple[Face, ...]) -> int:
+    up, front = held[_CENTER_FACELETS[Face.U]], held[_CENTER_FACELETS[Face.F]]
+    try:
+        frame = frame_of(up, front)
+    except ValueError:
+        relation = "are the same" if up == front else "are opposite"
+        raise FaceletError(
+            f"centers {up.name} on top and {front.name} in front {relation}: "
+            "no cube can be held like that"
+        ) from None
+    expected = [Face(_FRAME_FACELETS[frame][center] // 9) for center in _CENTER_FACELETS]
+    actual = [held[center] for center in _CENTER_FACELETS]
+    if actual != expected:
+        mirrored = list(expected)
+        mirrored[Face.R], mirrored[Face.L] = expected[Face.L], expected[Face.R]
+        problem = "centers are a mirror image" if actual == mirrored else "impossible centers"
+        position = next(p for p in Face if actual[p] != expected[p])
+        raise FaceletError(
+            f"{problem}: with {up.name} on top and {front.name} in front, "
+            f"{expected[position].name} must be {_CENTER_PLACES[position]}, "
+            f"got {actual[position].name}"
+        )
+    return frame
+
+
+def _read_pieces(
+    kind: str,
+    names: type[IntEnum],
+    places: Sequence[tuple[int, ...]],
+    pieces: Mapping[tuple[Face, ...], int],
+    fixed: Sequence[Face],
+    held: Sequence[Face],
+    held_index: Sequence[int],
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    # Reads one orbit from the frame-0 layout. Errors name slots and stickers as held:
+    # held_index[i] is where fixed facelet i is shown.
+    held_slots = {frozenset(slot): i for i, slot in enumerate(places)}
+    perm: list[int] = []
+    orient: list[int] = []
+    seen: dict[int, int] = {}
+    for slot in places:
+        colors = tuple(fixed[i] for i in slot)
+        held_slot = held_slots[frozenset(held_index[i] for i in slot)]
+        # The orientation is the rotation that lists the colors as the piece lists them.
+        found = [
+            (pieces[turned], k)
+            for k in range(len(colors))
+            if (turned := colors[k:] + colors[:k]) in pieces
+        ]
+        if not found:
+            stickers = ", ".join(held[i].name for i in places[held_slot])
+            reason = (
+                " (clockwise): no corner has these colors in this order"
+                if kind == "corner"
+                else ": no edge has these colors"
+            )
+            raise FaceletError(
+                f"the {kind} at {names(held_slot).name} has stickers {stickers}{reason}"
+            )
+        piece, orientation = found[0]
+        if piece in seen:
+            raise FaceletError(
+                f"{kind} {names(piece).name} appears twice, at {names(seen[piece]).name} "
+                f"and {names(held_slot).name}"
+            )
+        seen[piece] = held_slot
+        perm.append(piece)
+        orient.append(orientation)
+    return tuple(perm), tuple(orient)
+
+
+def from_facelet_string(text: str) -> CubeState:
+    """Return the state described by a 54-character facelet string, as held.
+
+    The inverse of :func:`to_facelet_string`: the centers give the frame. Leading and
+    trailing whitespace is ignored; otherwise only the letters U, R, F, D, L, B are allowed.
+
+    Raises:
+        FaceletError: naming the first problem found (length, characters, sticker counts,
+            centers, pieces, then the invariants checked by :meth:`CubeState.validate`).
+    """
+    held = _read_stickers(text.strip())
+    frame = _read_frame(held)
+    fixed = [Face.U] * _N_FACELETS
+    held_index = [0] * _N_FACELETS
+    for i, source in enumerate(_FRAME_FACELETS[frame]):
+        fixed[source] = held[i]
+        held_index[source] = i
+    cp, co = _read_pieces(
+        "corner", Corner, _CORNER_FACELETS, _CORNER_PIECES, fixed, held, held_index
+    )
+    ep, eo = _read_pieces("edge", Edge, _EDGE_FACELETS, _EDGE_PIECES, fixed, held, held_index)
+    state = CubeState(cp, co, ep, eo, frame)
+    try:
+        state.validate()
+    except ValueError as error:
+        if sum(co) % 3:
+            hint = "a twisted corner"
+        elif sum(eo) % 2:
+            hint = "a flipped edge"
+        else:
+            hint = "two swapped pieces"
+        raise FaceletError(f"impossible cube: {error} ({hint})") from None
+    return state
 
 
 # Where each face's block goes in the net, in face units (row, column): U above F,
