@@ -33,21 +33,19 @@ uv sync
 uv run subeventually show "R U R' U'"
 ```
 
-This prints the cube after the moves, white on top and green in front, with one colored letter per sticker:
+This prints the cube after the moves as an unfolded net, starting from white on top and green in front. There are two styles:
 
-```
-       W W O
-       W W G
-       W W G
-B O O  G G Y  R R W  B R R
-O O O  G G W  B R R  B B B
-O O O  G G G  W R R  B B B
-       Y Y R
-       Y Y Y
-       Y Y Y
-```
+- `letters` (the default): one bold letter per sticker, in its color (W white, Y yellow, G green, B blue, R red, O orange);
+- `blocks`: one colored square per sticker, with `--style blocks`.
 
-Add `--style blocks` for colored squares instead of letters.
+Both are drawn on their own dark background, so white and yellow stay readable whatever your terminal theme. Here they are in a light and in a dark terminal:
+
+<p>
+  <img src="docs/images/show-light.png" width="49%" alt="subeventually show in a light terminal: the net of R U R' U' in the letters style and in the blocks style, each on a dark background">
+  <img src="docs/images/show-dark.png" width="49%" alt="subeventually show in a dark terminal: the same two nets of R U R' U'">
+</p>
+
+When the output is not a color terminal (piped to a file, or with `NO_COLOR` set), it falls back to plain text with the face letters of the [facelet string](docs/NOTATION.md#facelets).
 
 ## Documentation
 
