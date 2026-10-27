@@ -4,7 +4,7 @@
 
 A self-hosted speedcubing platform built around a **cubing assistant**. After each solve, the assistant works out the best solve possible with every algorithm, and the best solve possible with *the algorithms you actually know*. It then shows where the time went and which algorithm is worth learning next.
 
-> **Status:** early development (Phase 1, terminal app). Nothing usable yet.
+> **Status:** early development (Phase 1, terminal app). So far it can show you a cube. Solving it is still on you.
 
 ## Planned features
 
@@ -23,6 +23,31 @@ packages/
   tui/    subeventually: terminal app
 docs/     vision, architecture, roadmap, decision records
 ```
+
+## Try it
+
+You need [`uv`](https://docs.astral.sh/uv/). From a clone of the repository:
+
+```bash
+uv sync
+uv run subeventually show "R U R' U'"
+```
+
+This prints the cube after the moves, white on top and green in front, with one colored letter per sticker:
+
+```
+       W W O
+       W W G
+       W W G
+B O O  G G Y  R R W  B R R
+O O O  G G W  B R R  B B B
+O O O  G G G  W R R  B B B
+       Y Y R
+       Y Y Y
+       Y Y Y
+```
+
+Add `--style blocks` for colored squares instead of letters.
 
 ## Documentation
 
