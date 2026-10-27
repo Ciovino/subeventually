@@ -22,7 +22,7 @@ The core is a library with no UI code, so the Phase 2 server can import it uncha
 
 ## Cube model
 
-State representation, numbering and orientation conventions: [ADR 0004](adr/0004-cube-state-representation.md). Numbering of the 24 whole-cube orientations (frames): [ADR 0005](adr/0005-frame-encoding.md).
+State representation, numbering and orientation conventions: [ADR 0004](adr/0004-cube-state-representation.md). Numbering of the 24 whole-cube orientations (frames): [ADR 0005](adr/0005-frame-encoding.md). Facelet string: [ADR 0006](adr/0006-facelet-string.md).
 
 - Cubie-based state (corner/edge permutation and orientation), compact and hashable.
 - Precomputed move tables and pruning tables for search.

@@ -4,7 +4,10 @@ version = "0.1.0.dev0"
 description = "Terminal app for the subeventually cubing assistant"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
-dependencies = ["subeventually-core"]
+dependencies = [
+    "rich>=15.0.0",
+    "subeventually-core",
+]
 
 [project.scripts]
 subeventually = "subeventually_tui.cli:main"
