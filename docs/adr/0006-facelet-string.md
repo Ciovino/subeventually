@@ -1,6 +1,6 @@
 # 0006. Facelet string
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-27
 
 ## Context
