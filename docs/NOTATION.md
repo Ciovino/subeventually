@@ -202,3 +202,80 @@ An empty input, or one with only comments, is not an error: it is an empty seque
 | H perm | `M2 U M2 U2 M2 U M2` | same |
 | Sune from the back, with an extra-turn `R3` | `y2 (R U R' U) R U2' R3` | `y2 R U R' U R U2 R'` |
 | An OLL typed on a phone | `Y rUR’U’r’FRF’` | `y Rw U R' U' Rw' F R F'` |
+
+## Facelets
+
+A cube state can also be written sticker by sticker, as a **facelet string**: 54 letters, one per sticker. This is the format used by most cube solvers and tools, so states can be compared with them. Each letter is the color of a sticker, named by the face whose center has that color in WCA orientation:
+
+| Letter | Color |
+|---|---|
+| `U` | white |
+| `R` | red |
+| `F` | green |
+| `D` | yellow |
+| `L` | orange |
+| `B` | blue |
+
+### Order
+
+The stickers come face by face in the order U, R, F, D, L, B, nine per face, row by row. The numbers below are the positions in the string, counted from 0, on the unfolded cube:
+
+```
+           0  1  2
+           3  4  5
+           6  7  8
+36 37 38  18 19 20   9 10 11  45 46 47
+39 40 41  21 22 23  12 13 14  48 49 50
+42 43 44  24 25 26  15 16 17  51 52 53
+          27 28 29
+          30 31 32
+          33 34 35
+```
+
+The top block is U, the middle row is L, F, R, B, and the bottom block is D. Each face is drawn as you see it when you look straight at it:
+
+| Face | Looked at from | The top row of the drawing is next to |
+|---|---|---|
+| U | above | B (so 6 7 8 are next to F) |
+| L, F, R, B | its own side, U on top | U |
+| D | below | F (so 27 28 29 are next to F) |
+
+In particular, B is seen from behind: its left column (45 48 51) is next to R.
+
+A solved cube is:
+
+```
+UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
+```
+
+and after `R`:
+
+```
+UUFUUFUUFRRRRRRRRRFFDFFDFFDDDBDDBDDBLLLLLLLLLUBBUBBUBB
+```
+
+### Rotations and the centers
+
+The string shows the cube **as you hold it**: positions 0 to 8 are whatever face is on top now. The letters are still colors, so after a rotation the centers (positions 4, 13, 22, 31, 40, 49) move. After `x`, green is on top:
+
+```
+FFFFFFFFFRRRRRRRRRDDDDDDDDDBBBBBBBBBLLLLLLLLLUUUUUUUUU
+```
+
+So the centers tell how the cube is held. Most other tools assume the centers never move. They read and write the same strings as subeventually for a cube held in WCA orientation (`U` center on top, `F` center in front).
+
+### Text net
+
+The same layout, printed as text with a letter per sticker:
+
+```
+       U U U
+       U U U
+       U U U
+L L L  F F F  R R R  B B B
+L L L  F F F  R R R  B B B
+L L L  F F F  R R R  B B B
+       D D D
+       D D D
+       D D D
+```
