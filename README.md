@@ -4,7 +4,7 @@
 
 A self-hosted speedcubing platform built around a **cubing assistant**. After each solve, the assistant works out the best solve possible with every algorithm, and the best solve possible with *the algorithms you actually know*. It then shows where the time went and which algorithm is worth learning next.
 
-> **Status:** early development (Phase 1, terminal app). So far it can show you a cube. Solving it is still on you.
+> **Status:** early development (Phase 1, terminal app). So far it has a cube you can play with. Solving it is still on you.
 
 ## Planned features
 
@@ -46,6 +46,33 @@ Both are drawn on their own dark background, so white and yellow stay readable w
 </p>
 
 When the output is not a color terminal (piped to a file, or with `NO_COLOR` set), it falls back to plain text with the face letters of the [facelet string](docs/NOTATION.md#facelets).
+
+### Playground
+
+```bash
+uv run subeventually playground
+```
+
+An interactive cube: type moves in [WCA notation](docs/NOTATION.md) and press Enter, and the net, the [facelet string](docs/NOTATION.md#facelets) and the history update. Each line you enter is one step you can undo. A mistyped line is not applied: the error points at the problem and the line stays there to fix.
+
+<p>
+  <img src="docs/images/playground-light.png" width="49%" alt="subeventually playground in a light theme: the net in the letters style, a history of three lines, the status line, the facelet string, and an error pointing at the mistyped U2 R'2">
+  <img src="docs/images/playground-dark.png" width="49%" alt="subeventually playground in a dark theme: the same session">
+</p>
+
+Commands start with `:`.
+
+| Command | Key | Does |
+|---|---|---|
+| `:undo`, `:redo` | `ctrl+z`, `ctrl+y` | undo or redo the last line |
+| `:inverse` | | apply the inverse of the whole history, back to the start |
+| `:reset` | | back to a solved cube, with an empty history |
+| `:setup R U R' U'` | | start again from a solved cube after these moves |
+| `:state` | | copy the facelet string to the clipboard (if your terminal allows it) |
+| `:state UUUUUUUUURRR...` | | start again from a facelet string |
+| `:style` | `ctrl+t` | switch between letters and blocks |
+| `:help` | `f1` | list the commands and keys |
+| `:quit` | `ctrl+q` | quit |
 
 ## Documentation
 
