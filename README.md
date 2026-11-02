@@ -55,6 +55,11 @@ uv run subeventually playground
 
 An interactive cube: type moves in [WCA notation](docs/NOTATION.md) and press Enter, and the net, the [facelet string](docs/NOTATION.md#facelets) and the history update. Each line you enter is one step you can undo. A mistyped line is not applied: the error points at the problem and the line stays there to fix.
 
+<p>
+  <img src="docs/images/playground-light.png" width="49%" alt="subeventually playground in a light theme: the net in the letters style, a history of three lines, the status line, the facelet string, and an error pointing at the mistyped U2 R'2">
+  <img src="docs/images/playground-dark.png" width="49%" alt="subeventually playground in a dark theme: the same session">
+</p>
+
 Commands start with `:`.
 
 | Command | Key | Does |
