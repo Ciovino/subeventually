@@ -28,6 +28,7 @@ State representation, numbering and orientation conventions: [ADR 0004](adr/0004
 - Precomputed move tables and pruning tables for search.
 - A facelet view only for display and input validation.
 - WCA notation parser and formatter: face turns, wide moves, slices, rotations, comments (`// ...`). The accepted notation is specified in [NOTATION.md](NOTATION.md).
+- A session for interactive use (`subeventually_core.session`): a start state and the history of applied sequences, with undo, redo, inverse and reset. Immutable like the state; a failed operation raises and changes nothing. It contains no UI code, so any front end can drive it.
 
 ## Methods and stages
 
