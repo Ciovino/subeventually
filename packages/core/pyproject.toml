@@ -1,6 +1,6 @@
 [project]
 name = "subeventually-core"
-version = "0.1.0.dev0"
+version = "0.1.0a1"
 description = "Cube model, methods, solver and analysis for the subeventually cubing assistant"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"

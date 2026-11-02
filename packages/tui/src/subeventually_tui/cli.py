@@ -31,6 +31,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=NET_STYLES[0],
         help="color letters (default) or colored blocks; ignored without a color terminal",
     )
+    commands.add_parser(
+        "playground",
+        help="play with a cube interactively",
+        description="Type moves, watch the cube change, undo and inspect the state.",
+    )
     args = parser.parse_args(argv)
 
     if args.command == "show":
@@ -39,4 +44,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         except NotationError as error:
             show.error(str(error))
         print_net(SOLVED.apply_all(moves), Console(), args.style)
+    elif args.command == "playground":
+        # Imported here so the other commands don't pay for loading Textual.
+        from subeventually_tui.playground import PlaygroundApp
+
+        PlaygroundApp().run()
     return 0
